@@ -41,11 +41,11 @@
     display: block;
     text-decoration: none;
     width: 230px;
-    height: 230px
+    height: 230px;
 }
 
 .main-image img {
-    border-radius: 3px
+    max-width: 230px
 }
 
 .title,
@@ -147,10 +147,6 @@
 
 .poll-bg {
     background-color: #00cf1c !important;
-}
-
-.item .image {
-    max-height: 230px;
 }
 
 .avatar {
