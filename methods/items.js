@@ -1,27 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const p = path.join(
-  path.dirname(require.main.filename),
-  'data',
-  'items.json'
-);
+const p = path.join(path.dirname(require.main.filename), "data", "items.json");
 
 module.exports = class Item {
   constructor(itemData) {
     this.id = 0;
     this.user = itemData.user;
     this.title = itemData.title;
-    this.image = itemData.image;
+    this.image = `/uploads/${itemData.filename}`;
     this.description = itemData.description;
     this.options = itemData.options;
     this.date = new Date();
     this.tags = itemData.tags;
     this.type = itemData.type;
-    this.votes = itemData.votes;
+    this.votes = itemData.votes?.map((vote) => parseInt(vote));
     this.vote = itemData.vote;
     this.members = 10;
   }
+
 
   save() {
     fs.readFile(p, (err, fileContent) => {

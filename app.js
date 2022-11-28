@@ -1,16 +1,30 @@
 const path = require('path');
 const express = require('express');
+const multer = require("multer");
 const Joi = require('joi');
 const fs = require('fs');
 
 const Item = require('./methods/items');
-const { max } = require('joi/lib/types/array');
+
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads')
+  },
+  filename: function (req, file, cb) {
+    let extArray = file.mimetype.split("/");
+    let extension = extArray[extArray.length - 1];
+    cb(null, file.fieldname + '-' + Date.now() + '.' + extension)
+  }
+})
+
+const upload = multer({ storage: storage })
 
 const app = express();
 
 
 // express.json to decifer json data from incoming requests
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // GETs all data from items.json file 
@@ -43,13 +57,13 @@ app.get('/items', (req, res) => {
 
 // POSTs items to the items.json file
 // IF THERE IS NO AUTHENTICATED USER THE ADD BUTTON WILL NOT BE SHOWN !!!!!!!!!!!!!!!!
-app.post('/post', (req, res) => {
+app.post('/post', upload.single("image"), (req, res) => {
+
 
   // Joi Schema = how the incoming input data is validated
   const schema = {
     user: Joi.string().min(6).max(12).required(),
     title: Joi.string().min(5).required(),
-    image: Joi.string().required(),
     description: Joi.string().min(2).max(500).required(),
     options: Joi.array().required(),
     tags: Joi.string().required(),
@@ -67,7 +81,7 @@ app.post('/post', (req, res) => {
     res.send({ "status": 200 })
   }
 
-  const item = new Item(req.body);
+  const item = new Item({ ...req.body, ...req.file });
   item.save();
 });
 

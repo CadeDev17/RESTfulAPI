@@ -5,12 +5,10 @@ import { url } from '/js/proton.js';
 import { makeChart } from '/js/chart.js';
 
 // here we will add all user input data
-let postData = {}
-let isEditing = false;
-let fetchedItems = new Object();
 let postType;
-let pollOptions = []
-
+let pollOptions = [];
+let imageValid = false;
+let imageValidation = '';
 
 let fetchURL = url + '/items';
 
@@ -110,37 +108,23 @@ $('#post-item').addEventListener('change', (event) => {
         });
     }
 
+    // check file selected
     let theFile;
-    event.target.files ? theFile = event.target.files[0] : null;
-    //console.log(theFile);
+    if (event.target.files) {
+        theFile = event.target.files[0];
+        $('#error').innerHTML = '';
+        if (checkFileProperties(theFile)) {
+            handleUploadedFile(theFile);
+        }
+    }
 
-    // if (checkFileProperties(theFile)) {
-    //     handleUploadedFile(theFile);
-    // }
 });
 
 // Add items to the data array in items.json
 $('#post-item').addEventListener('submit', (event) => {
     event.preventDefault();
-    postData = {}
-    // If the user is NOT editing, this will check to make sure that there is NOT an
-    // already existing item in the items.json file
-    if (!isEditing) {
-        fetch(url + '/items')
-            .then(response => {
-                return response.json()
-            })
-            .then(itemData => {
-                itemData.forEach(item => {
-                    if ($('#title').value === item.title) {
-                        return new Error('Item already exists!')
-                    }
-                })
-            })
-            .catch(err => {
-                console.log(err)
-            })
 
+    if (imageValid) {
         // get the number of options added and push 0 for each of them to the votes array
         let votes = [];
         const voteInputsNr = $$('.voteInput').length;
@@ -148,25 +132,26 @@ $('#post-item').addEventListener('submit', (event) => {
             votes.push(0);
         }
 
-        // postData object gets filled with correct input information
-        postData.user = user;
-        postData.title = $('#title').value;
-        postData.image = $('#image').value;
-        postData.description = $('#description').value;
-        postType === 'poll' ? postData.options = pollOptions : postData.options = ['Yes', 'No'];
-        postData.tags = $('#tags-input').value;
-        postData.type = $('input[name="type"]:checked').value;
-        postData.votes = votes;
-        let strPostData = JSON.stringify(postData);
+        const formData = new FormData();
+
+
+        formData.append("user", user);
+        formData.append("title", $("#title").value);
+        formData.append("image", $("#image").files[0]);
+        formData.append("description", $("#description").value);
+        (postType === "poll" ? pollOptions : ["Yes", "No"]).forEach((option) =>
+            formData.append("options[]", option)
+        );
+        formData.append("tags", "tag1, tag5");
+        formData.append("type", $('input[name="type"]:checked').value);
+        (votes || []).forEach((option) =>
+            formData.append("votes[]", parseInt(option))
+        );
 
         // Sends post request to /post with all input information
         fetch(url + '/post', {
             method: "POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: strPostData
+            body: formData
         }).then(response => {
             return response.json();
         }).then(returnedData => {
@@ -182,6 +167,7 @@ $('#post-item').addEventListener('submit', (event) => {
 
         });
     }
+
 });
 
 
@@ -193,8 +179,6 @@ const getItems = () => {
             return response.json();
         })
         .then(data => {
-            fetchedItems = data;
-
             //Takes data from files and calls the HTML template to display the data
             $('#items').innerHTML = '';
             data.forEach(item => {
@@ -203,16 +187,7 @@ const getItems = () => {
                 makeChart(data);
                 voteBTN();
 
-                // EDIT FUNCTIONALITY
-                $$('.edit').forEach(element => {
-                    element.addEventListener('click', (event) => {
-                        isEditing = true
-                        $('#post-item').style.display = 'block'
-                        // get the id (title) of the clicked item
-                        element.id = event.target.id;
-                        editItems(element.id)
-                    });
-                });
+
                 $$('.delete').forEach(element => {
                     element.addEventListener('click', (event) => {
                         // get the id (title) of the clicked item
@@ -262,7 +237,44 @@ const deleteItem = (id) => {
             .catch(err => {
                 console.log(err)
             })
-    } else {
-
     }
+}
+
+// HANDLING IMAGE UPLOAD
+
+function checkFileProperties(theFile) {
+    if (
+        theFile &&
+        (theFile.type !== "image/png" && theFile.type !== "image/jpeg" && theFile.type !== "image/jpg" && theFile.type !== "image/gif" && theFile.type !== "image/webp" && theFile.type !== "image/svg")
+    ) {
+        imageValidation = '<b>Error:</b> Only - PNG, JPG, JPEG, GIF, WEBP and SVG file types are accepted.';
+        $('#error').innerHTML = imageValidation;
+        return false;
+    } else { imageValid = true; }
+
+    if (theFile.size > 512000) {
+        imageValidation = '<b>Error:</b> ' + (theFile.size / 1024).toFixed(2) + ' KB - File size is too big. Max file size is: 500 KB';
+        $('#error').innerHTML = imageValidation;
+        return false;
+    } else { imageValid = true; }
+
+    return true;
+}
+
+function handleUploadedFile(file) {
+    $("#image-label").innerHTML = "";
+    const fileName = file.name;
+    var img = document.createElement("img");
+    img.setAttribute("id", "theImageTag");
+    img.file = file;
+    $("#image-label").appendChild(img);
+
+    var reader = new FileReader();
+    reader.onload = (function (aImg) {
+        return function (e) {
+            aImg.src = e.target.result;
+            $("#post-item").add;
+        };
+    })(img);
+    reader.readAsDataURL(file);
 }
