@@ -17,7 +17,8 @@
 .item {
     width: 100%;
     margin: 0 0 32px 0;
-    border-bottom: 1px dashed #dadada;
+    border-bottom: 1px dashed #c3c3c3;
+    *background: linear-gradient(#ffffff, #c5e8ff);
     padding-bottom: 32px;
     display: flex;
     align-content: center;
@@ -45,7 +46,9 @@
 }
 
 .main-image img {
-    max-width: 230px
+    max-width: 230px;
+    max-height: 230px;
+    border-radius: 6px
 }
 
 .title,
@@ -79,6 +82,14 @@
 
 .description ol li * {
     cursor: pointer
+}
+
+.description p {
+    font-size: 14px
+}
+
+.description ol input {
+    vertical-align: bottom;
 }
 
 .description ol label {
@@ -174,14 +185,11 @@
 }
 
 .tags {
-    border-top: 1px dashed #dadada;
-    padding-top: 15px;
-    opacity: 0.69;
-    transition: 1s opacity
-}
-
-.tags:hover {
-    opacity: 1
+    border: 1px dotted #dadada;
+    background: #dadada;
+    padding: 10px;
+    transition: 1s opacity;
+    border-radius: 6px
 }
 
 .tag {
@@ -267,14 +275,15 @@ canvas {
     position: absolute;
     display: inline-block;
     background: #0274f9;
+    border: 12px solid #ffffff !important;
     color: #ffffff;
-    width: 64px !important;
-    height: 64px !important;
+    width: 88px !important;
+    height: 88px !important;
     border-radius: 51%;
     font-size: 16px;
     transition: 0.23s transform
 }
 
 .vote-btn:hover {
-    transform: scale(2.3)
+    transform: scale(2)
 }
